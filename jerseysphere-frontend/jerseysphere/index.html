@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JerseySphere — Club kits &amp; retro jerseys</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: { extend: {
+      colors: { night:'#0E1A14', surface:'#16241C', surface2:'#1E2F25', gold:'#D9A441', pitch:'#4CAF6D', retro:'#C0463A', ecru:'#F3EFE3', muted:'#9CA89E', line:'#2A3B30' },
+      fontFamily: { display:['Anton','sans-serif'], mono:['Space Mono','monospace'] },
+    }}
+  };
+</script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="index" class="bg-night">
+
+<div id="site-header"></div>
+
+<main>
+  <!-- HERO -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-16 grid lg:grid-cols-2 gap-12 items-center">
+    <div>
+      <p class="font-mono text-xs uppercase tracking-[0.2em] text-pitch mb-4">2026 club kits · retro vintage · unisex fit</p>
+      <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl leading-[0.95] text-ecru">WEAR THE<br><span class="text-gold">BADGE</span></h1>
+      <p class="text-muted text-base sm:text-lg mt-6 max-w-md leading-relaxed">From this season's home kits to shirts pulled straight off the rail of football history — Real Madrid, Barcelona, Liverpool, City, Chelsea, Inter Milan and Inter Miami. Add your own name and number to any of them.</p>
+      <div class="flex flex-wrap gap-3 mt-8">
+        <a href="shop.html?type=2026" class="bg-gold text-[#16130A] font-mono text-sm uppercase tracking-wide px-6 py-3 rounded-full hover:opacity-90">Shop 2026 kits</a>
+        <a href="shop.html?type=retro" class="border border-line text-ecru font-mono text-sm uppercase tracking-wide px-6 py-3 rounded-full hover:border-gold">Browse retro kits</a>
+      </div>
+    </div>
+    <div class="relative h-72 sm:h-96 hidden sm:block" data-hero-rail></div>
+  </section>
+
+  <div class="pitch-divider"></div>
+
+  <!-- LEAGUE LINKS -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+    <p class="font-mono text-xs uppercase tracking-wide text-muted mb-4">Shop by league</p>
+    <div class="flex flex-wrap gap-3" id="league-pills"></div>
+  </section>
+
+  <!-- CLUB GRID -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+    <div class="flex items-baseline justify-between mb-6">
+      <h2 class="font-display text-2xl sm:text-3xl text-ecru">Featured clubs</h2>
+      <a href="shop.html" class="font-mono text-xs uppercase text-gold hover:underline">View all kits</a>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4" id="club-grid"></div>
+  </section>
+
+  <div class="pitch-divider"></div>
+
+  <!-- 2026 vs RETRO SPLIT -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 py-14 grid sm:grid-cols-2 gap-6">
+    <a href="shop.html?type=2026" class="group relative bg-surface border border-line rounded-2xl p-8 overflow-hidden card-lift">
+      <span class="font-mono text-[11px] uppercase tracking-wide text-pitch">This season</span>
+      <h3 class="font-display text-3xl text-ecru mt-2">2026 club kits</h3>
+      <p class="text-muted mt-3 max-w-sm">The current home, away and third shirts for every club on the site — printable with any name and squad number.</p>
+      <span class="inline-block mt-6 font-mono text-sm text-gold group-hover:underline">Browse 2026 →</span>
+    </a>
+    <a href="shop.html?type=retro" class="group relative bg-surface border border-line rounded-2xl p-8 overflow-hidden card-lift">
+      <span class="font-mono text-[11px] uppercase tracking-wide text-retro">From the archive</span>
+      <h3 class="font-display text-3xl text-ecru mt-2">Retro vintage kits</h3>
+      <p class="text-muted mt-3 max-w-sm">Shirts tied to real seasons and trophies, recreated true to the original cut, collar and crest.</p>
+      <span class="inline-block mt-6 font-mono text-sm text-gold group-hover:underline">Browse retro →</span>
+    </a>
+  </section>
+
+  <!-- FEATURED PRODUCTS -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+    <div class="flex items-baseline justify-between mb-6">
+      <h2 class="font-display text-2xl sm:text-3xl text-ecru">New on the rail</h2>
+      <a href="shop.html" class="font-mono text-xs uppercase text-gold hover:underline">View all</a>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5" id="featured-grid"></div>
+  </section>
+
+  <!-- CUSTOMIZE CTA -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+    <div class="bg-surface border border-line rounded-2xl p-8 sm:p-12 flex flex-col sm:flex-row items-center justify-between gap-8">
+      <div>
+        <p class="font-mono text-[11px] uppercase tracking-wide text-gold mb-2">Make it yours</p>
+        <h3 class="font-display text-2xl sm:text-3xl text-ecru max-w-md">Name and squad number, printed on any kit — 2026 or retro.</h3>
+      </div>
+      <a href="product.html?id=p01" class="shrink-0 bg-gold text-[#16130A] font-mono text-sm uppercase tracking-wide px-6 py-3 rounded-full hover:opacity-90">Try the customizer</a>
+    </div>
+  </section>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="js/data.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/jersey.js"></script>
+<script src="js/components.js"></script>
+<script src="js/main.js"></script>
+<script>
+ function renderHeroRail() {
+    const el = document.querySelector("[data-hero-rail]");
+    if (!el) return;
+    const picks = [
+      { id: "p01", rot: -8, top: "0", left: "5%" },
+      { id: "p07", rot: 4, top: "8%", left: "32%" },
+      { id: "p15", rot: -3, top: "2%", left: "60%" },
+    ];
+    el.innerHTML = picks.map((p) => {
+      const product = getProduct(p.id);
+      const c = club(product.clubId);
+      const visual = product.image
+       ? `<img src="${product.image}" alt="${product.name}" class="w-[220px] h-[220px] object-cover rounded-xl" />`
+       : jerseySVG({ primary: c.primary, secondary: c.secondary, size: 220 });
+      return `
+      <div class="absolute bg-surface border border-line rounded-2xl p-4 shadow-2xl" style="top:${p.top};left:${p.left};transform:rotate(${p.rot}deg);">
+        ${visual}
+      </div>`;
+    }).join("");
+  }
+
+  function renderLeaguePills() {
+    document.getElementById("league-pills").innerHTML = LEAGUES.map(
+      (l) => `<a href="shop.html?league=${encodeURIComponent(l)}" class="border border-line text-ecru font-mono text-xs uppercase tracking-wide px-4 py-2 rounded-full hover:border-gold hover:text-gold">${l}</a>`
+    ).join("");
+  }
+
+ function renderClubGrid() {
+    document.getElementById("club-grid").innerHTML = CLUBS.map((c) => `
+      <a href="shop.html?club=${c.id}" class="bg-surface border border-line rounded-xl p-4 flex flex-col items-center gap-2 card-lift">
+        ${c.logo
+          ? `<img src="${c.logo}" alt="${c.name}" class="w-12 h-12 object-contain" />`
+          : `<span class="w-10 h-10 rounded-full border border-line" style="background:${c.primary}"></span>`}
+        <span class="text-xs text-ecru text-center leading-tight">${c.name}</span>
+      </a>`).join("");
+  }
+
+  function renderFeatured() {
+    const picks = ["p01","p07","p03","p09","p04","p13","p08","p15"].map(getProduct);
+    document.getElementById("featured-grid").innerHTML = picks.map(productCardHTML).join("");
+  }
+
+  renderHeroRail();
+  renderLeaguePills();
+  renderClubGrid();
+  renderFeatured();
+</script>
+</body>
+</html>

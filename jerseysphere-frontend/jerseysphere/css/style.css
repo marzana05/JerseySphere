@@ -1,0 +1,93 @@
+/* ===========================================================
+   JerseySphere — custom styles
+   Tailwind (via CDN) handles layout/utilities. This file only
+   covers the things utilities can't express cleanly: the
+   diagonal pitch-stripe divider, the woven kit-tag label,
+   font loading, and focus-visible states.
+   =========================================================== */
+
+:root {
+  --bg-base: #0E1A14;
+  --bg-surface: #16241C;
+  --bg-surface-2: #1E2F25;
+  --accent-gold: #D9A441;
+  --accent-pitch: #4CAF6D;
+  --accent-retro: #C0463A;
+  --text-ecru: #F3EFE3;
+  --text-muted: #9CA89E;
+  --line: #2A3B30;
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-ecru);
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+.font-display { font-family: "Anton", "Inter", sans-serif; }
+.font-mono { font-family: "Space Mono", monospace; }
+
+/* Focus visibility kept everywhere, even on dark surfaces */
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
+/* Pitch-stripe divider: a quiet nod to mown-grass lines, used between sections */
+.pitch-divider {
+  height: 28px;
+  background-image: repeating-linear-gradient(
+    100deg,
+    rgba(76, 175, 109, 0.07) 0px,
+    rgba(76, 175, 109, 0.07) 26px,
+    transparent 26px,
+    transparent 52px
+  );
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+/* Woven kit-tag corner label — the site's recurring signature element,
+   styled after the label sewn into a jersey's collar */
+.kit-tag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--bg-base);
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+  font-family: "Space Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  padding: 3px 7px;
+  border-radius: 4px;
+  z-index: 10;
+}
+.kit-tag-dot { color: var(--accent-gold); }
+
+.nav-link { position: relative; padding-bottom: 4px; transition: color 0.15s; }
+.nav-link:hover { color: var(--text-ecru); }
+.nav-link-mobile { font-family: "Space Mono", monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); padding: 6px 0; }
+
+.card-lift { transition: transform 0.2s ease, border-color 0.2s ease; }
+.card-lift:hover { transform: translateY(-3px); border-color: var(--accent-gold); }
+
+.step-num {
+  font-family: "Space Mono", monospace;
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.step-num.active { border-color: var(--accent-gold); color: var(--accent-gold); }
+.step-num.done { background: var(--accent-pitch); color: var(--bg-base); border-color: var(--accent-pitch); }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: var(--bg-surface-2); border-radius: 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .card-lift { transition: none; }
+}
