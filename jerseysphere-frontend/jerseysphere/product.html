@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jersey details — JerseySphere</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: { extend: {
+      colors: { night:'#0E1A14', surface:'#16241C', surface2:'#1E2F25', gold:'#D9A441', pitch:'#4CAF6D', retro:'#C0463A', ecru:'#F3EFE3', muted:'#9CA89E', line:'#2A3B30' },
+      fontFamily: { display:['Anton','sans-serif'], mono:['Space Mono','monospace'] },
+    }}
+  };
+</script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="product" class="bg-night">
+
+<div id="site-header"></div>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 py-8" id="product-root">
+  <!-- filled by product.js -->
+</main>
+
+<!-- SIZE GUIDE MODAL -->
+<div data-size-modal class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+  <div class="bg-surface border border-line rounded-2xl max-w-lg w-full p-6 max-h-[85vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-display text-xl text-ecru">Size guide</h3>
+      <button data-size-modal-close class="text-muted hover:text-ecru text-xl leading-none">&times;</button>
+    </div>
+    <p class="font-mono text-[11px] uppercase text-pitch mb-4">Unisex fit — measurements apply to all sizes listed</p>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left">
+        <thead class="text-muted font-mono text-xs uppercase border-b border-line">
+          <tr><th class="py-2 pr-3">Size</th><th class="py-2 pr-3">Chest (cm / in)</th><th class="py-2 pr-3">Length (cm / in)</th><th class="py-2">Shoulder (cm / in)</th></tr>
+        </thead>
+        <tbody id="size-guide-rows" class="text-ecru"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="site-footer"></div>
+
+<script src="js/data.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/jersey.js"></script>
+<script src="js/components.js"></script>
+<script src="js/main.js"></script>
+<script src="js/product.js"></script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop jerseys — JerseySphere</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: { extend: {
+      colors: { night:'#0E1A14', surface:'#16241C', surface2:'#1E2F25', gold:'#D9A441', pitch:'#4CAF6D', retro:'#C0463A', ecru:'#F3EFE3', muted:'#9CA89E', line:'#2A3B30' },
+      fontFamily: { display:['Anton','sans-serif'], mono:['Space Mono','monospace'] },
+    }}
+  };
+</script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="shop" class="bg-night">
+
+<div id="site-header"></div>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+  <div class="flex items-center justify-between mb-2">
+    <h1 class="font-display text-3xl sm:text-4xl text-ecru">Shop jerseys</h1>
+    <button data-filter-toggle class="lg:hidden font-mono text-xs uppercase border border-line rounded-full px-4 py-2 text-ecru">Filters</button>
+  </div>
+  <p class="text-muted text-sm mb-6" id="result-count"></p>
+
+  <div id="active-tags" class="flex flex-wrap gap-2 mb-6"></div>
+
+  <div class="grid lg:grid-cols-[240px_1fr] gap-8">
+    <!-- FILTER SIDEBAR -->
+    <aside data-filter-panel class="hidden lg:block bg-surface border border-line rounded-2xl p-5 h-fit lg:sticky lg:top-24">
+      <div class="flex items-center justify-between mb-4">
+        <p class="font-mono text-xs uppercase tracking-wide text-gold">Filters</p>
+        <button id="clear-filters" class="font-mono text-[11px] uppercase text-muted hover:text-gold">Clear all</button>
+      </div>
+
+      <div class="mb-6">
+        <p class="text-xs uppercase font-mono text-muted mb-2">Kit era</p>
+        <div id="filter-type" class="space-y-2"></div>
+      </div>
+
+      <div class="mb-6">
+        <p class="text-xs uppercase font-mono text-muted mb-2">League</p>
+        <div id="filter-league" class="space-y-2"></div>
+      </div>
+
+      <div class="mb-6">
+        <p class="text-xs uppercase font-mono text-muted mb-2">Club</p>
+        <div id="filter-club" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+      </div>
+
+      <div>
+        <p class="text-xs uppercase font-mono text-muted mb-2">Kit type</p>
+        <div id="filter-kit" class="space-y-2"></div>
+      </div>
+    </aside>
+
+    <!-- RESULTS -->
+    <div>
+      <div class="flex justify-end mb-4">
+        <select id="sort-select" class="bg-surface border border-line rounded-full px-4 py-2 text-sm text-ecru font-mono focus:outline-none focus:ring-2 focus:ring-gold">
+          <option value="featured">Sort: Featured</option>
+          <option value="price-asc">Price: Low to high</option>
+          <option value="price-desc">Price: High to low</option>
+          <option value="rating">Highest rated</option>
+        </select>
+      </div>
+      <div id="product-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-5"></div>
+    </div>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="js/data.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/jersey.js"></script>
+<script src="js/components.js"></script>
+<script src="js/main.js"></script>
+<script src="js/shop.js"></script>
+</body>
+</html>
