@@ -159,5 +159,9 @@ function renderProfileTab(user) {
     <div><p class="text-xs font-mono uppercase text-muted">Email status</p><p class="text-ecru">${user.verified ? "Verified" : "Not verified yet"}</p></div>
   </div>`;
 }
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadProducts();
+  renderAccountShell();
+});
 
-document.addEventListener("DOMContentLoaded", renderAccountShell);
+
