@@ -1,5 +1,5 @@
 /* ===========================================================
-   JerseySphere — product detail page
+   Jersey Universe — product detail page
    =========================================================== */
 
 let unsavedCustomization = false;
@@ -82,7 +82,7 @@ function renderProduct(product) {
       <div class="mt-6 bg-surface border border-line rounded-2xl p-4">
         <label class="flex items-center gap-2 text-sm text-ecru cursor-pointer">
           <input type="checkbox" id="customize-toggle" class="w-4 h-4 rounded border-line bg-surface2 text-gold focus:ring-gold" />
-        Add a name and squad number (+৳300)
+        Add a name and squad number (+৳${product.customizationFee || 300})
         </label>
         <div id="customize-fields" class="hidden mt-4 space-y-3">
           <div>
@@ -142,13 +142,14 @@ function renderProduct(product) {
   `;
 
   wireGallery(product, c);
+  wireMagnifier(product);
   renderSizeOptions(product);
   wireCustomizer(product);
   wireAddToCart(product);
   document.getElementById("wishlist-slot").innerHTML = heartButton(product.id, true);
   wireSizeGuideModal();
   renderRelated(product);
-  wireReviews(product);
+  wireReviews(product); // async — runs in background, no need to await
 }
 
 /* ---------- Gallery ---------- */
@@ -157,27 +158,101 @@ function wireGallery(product, c) {
   function draw(tab) {
     const main = document.querySelector("[data-gallery-main]");
     const tagHTML = kitTag({ clubTag: c.tag, season: product.season, type: product.type });
+
     if (tab === "front") {
-  main.innerHTML = tagHTML + (product.image
-    ? `<img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover rounded-2xl" />`
-    : jerseySVG({ primary: c.primary, secondary: c.secondary, retro: product.type === "retro", size: 260 }));
-} else if (tab === "back") {
-      const name = document.getElementById("custom-name")?.value || "";
-      const number = document.getElementById("custom-number")?.value || "";
-      main.innerHTML = tagHTML + jerseySVG({ primary: c.primary, secondary: c.secondary, retro: product.type === "retro", name, number, size: 260 });
+      main.innerHTML = tagHTML + (product.image
+        ? `<img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover rounded-2xl" />`
+        : jerseySVG({ primary: c.primary, secondary: c.secondary, retro: product.type === "retro", size: 260 }));
+
+    } else if (tab === "back") {
+      if (product.backImage) {
+        // Show real back view photo from WordPress
+        main.innerHTML = tagHTML + `<img src="${product.backImage}" alt="${product.name} — back view" class="w-full h-full object-cover rounded-2xl" />`;
+      } else {
+        // Fallback — show customizer preview
+        const name   = document.getElementById("custom-name")?.value  || "";
+        const number = document.getElementById("custom-number")?.value || "";
+        main.innerHTML = tagHTML + jerseySVG({ primary: c.primary, secondary: c.secondary, retro: product.type === "retro", name, number, size: 260 });
+      }
+
     } else {
-      main.innerHTML = tagHTML + `
-        <div class="flex flex-col items-center gap-3">
-          <span class="w-32 h-32 rounded-full border-4" style="background:${c.primary};border-color:${c.secondary}"></span>
-          <p class="font-mono text-sm text-ecru">${c.tag} · ${product.season}</p>
-        </div>`;
+      if (product.closeupImage) {
+        // Show real close up photo from WordPress
+        main.innerHTML = tagHTML + `<img src="${product.closeupImage}" alt="${product.name} — close up" class="w-full h-full object-cover rounded-2xl" />`;
+      } else {
+        // Fallback — show badge illustration
+        main.innerHTML = tagHTML + `
+          <div class="flex flex-col items-center gap-3">
+            <span class="w-32 h-32 rounded-full border-4" style="background:${c.primary};border-color:${c.secondary}"></span>
+            <p class="font-mono text-sm text-ecru">${c.tag} · ${product.season}</p>
+          </div>`;
+      }
     }
+
     tabs.forEach((t) => t.classList.toggle("border-gold", t.dataset.galleryTab === tab));
-    tabs.forEach((t) => t.classList.toggle("text-gold", t.dataset.galleryTab === tab));
+    tabs.forEach((t) => t.classList.toggle("text-gold",   t.dataset.galleryTab === tab));
   }
+
   tabs.forEach((t) => t.addEventListener("click", () => draw(t.dataset.galleryTab)));
   draw("front");
   window._redrawGalleryBack = () => { if (document.querySelector(".gallery-tab.text-gold")?.dataset.galleryTab === "back") draw("back"); };
+}
+
+/* ---------- Magnifier ---------- */
+function wireMagnifier(product) {
+  const main = document.querySelector("[data-gallery-main]");
+  if (!main) return;
+
+  // Only show magnifier when a real photo is displayed
+  const glass = document.createElement("div");
+  glass.className = "img-magnifier-glass";
+  main.appendChild(glass);
+
+  // Add hint label
+  const hint = document.createElement("div");
+  hint.className = "magnifier-hint";
+  hint.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#D9A441" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Hover to zoom`;
+  main.appendChild(hint);
+
+  main.classList.add("img-magnifier-container");
+
+  const ZOOM = 2.5;
+  const GLASS_SIZE = 160;
+
+  main.addEventListener("mousemove", (e) => {
+    const img = main.querySelector("img");
+    if (!img) return;
+
+    const rect   = main.getBoundingClientRect();
+    const x      = e.clientX - rect.left;
+    const y      = e.clientY - rect.top;
+    const half   = GLASS_SIZE / 2;
+
+    // Position the glass centred on cursor, clamped to container edges
+    const glassX = Math.min(Math.max(x - half, 0), rect.width  - GLASS_SIZE);
+    const glassY = Math.min(Math.max(y - half, 0), rect.height - GLASS_SIZE);
+    glass.style.left = glassX + "px";
+    glass.style.top  = glassY + "px";
+
+    // Set the zoomed background
+    const bgW = rect.width  * ZOOM;
+    const bgH = rect.height * ZOOM;
+    const bgX = x * ZOOM - half;
+    const bgY = y * ZOOM - half;
+
+    glass.style.backgroundImage    = `url('${img.src}')`;
+    glass.style.backgroundSize     = `${bgW}px ${bgH}px`;
+    glass.style.backgroundPosition = `-${bgX}px -${bgY}px`;
+    glass.style.display            = "block";
+
+    // Hide the hint once they start using the magnifier
+    hint.style.display = "none";
+  });
+
+  main.addEventListener("mouseleave", () => {
+    glass.style.display = "none";
+    hint.style.display  = "flex";
+  });
 }
 
 /* ---------- Size selector ---------- */
@@ -217,7 +292,7 @@ function wireCustomizer(product) {
 
   toggle.addEventListener("change", () => {
     fields.classList.toggle("hidden", !toggle.checked);
-    price.textContent = formatMoney(product.price + (toggle.checked ? 300 : 0));
+    price.textContent = formatMoney(product.price + (toggle.checked ? product.customizationFee : 0));
     updateUnsavedFlag();
   });
 
@@ -255,7 +330,7 @@ function wireAddToCart(product) {
     }
     const toggle = document.getElementById("customize-toggle");
     const customization = toggle.checked
-      ? { name: document.getElementById("custom-name").value.trim().toUpperCase(), number: document.getElementById("custom-number").value.trim(), fee: 300 }
+      ? { name: document.getElementById("custom-name").value.trim().toUpperCase(), number: document.getElementById("custom-number").value.trim(), fee: product.customizationFee }
       : null;
     addToCart({ productId: product.id, size: activeSize, qty: 1, customization });
     unsavedCustomization = false;
@@ -296,14 +371,31 @@ function renderRelated(product) {
 
 /* ---------- Reviews ---------- */
 let draftRating = 5;
+let _cachedReviews = [];
 
-function wireReviews(product) {
-  document.getElementById("rating-summary").innerHTML = ratingSummaryHTML(product);
-  renderReviewsBlock(product);
+async function fetchReviewsFromWP(productId) {
+  try {
+    const response = await fetch(WP_URL + "/wp-json/jerseyuniverse/v1/reviews?product=" + productId);
+    if (!response.ok) throw new Error("Reviews API returned " + response.status);
+    return await response.json();
+  } catch (err) {
+    console.warn("Could not fetch reviews from WordPress:", err.message);
+    return [];
+  }
+}
+
+async function wireReviews(product) {
+  // Fetch reviews from WordPress
+  const wpReviews = await fetchReviewsFromWP(product.id);
+  const seeded = (typeof SEED_REVIEWS !== "undefined" && SEED_REVIEWS[product.id]) || [];
+  _cachedReviews = [...wpReviews, ...seeded];
+
+  document.getElementById("rating-summary").innerHTML = ratingSummaryHTML(_cachedReviews, product);
+  renderReviewsBlock(product, _cachedReviews);
 
   document.getElementById("review-sort").addEventListener("change", (e) => {
     reviewSort = e.target.value;
-    renderReviewsBlock(product);
+    renderReviewsBlock(product, _cachedReviews);
   });
 
   drawStarInput();
@@ -311,32 +403,74 @@ function wireReviews(product) {
     document.getElementById("review-char-count").textContent = `${e.target.value.length} / 500`;
   });
 
-  document.getElementById("submit-review").addEventListener("click", () => {
+  document.getElementById("submit-review").addEventListener("click", async () => {
     const title = document.getElementById("review-title").value.trim();
-    const body = document.getElementById("review-body").value.trim();
+    const body  = document.getElementById("review-body").value.trim();
     if (body.length < 20) { toast("Reviews need at least 20 characters"); return; }
+
     const user = currentUser();
-    addReview(product.id, {
-      name: user ? user.firstName + " " + user.lastName[0] + "." : "Guest reviewer",
-      rating: draftRating,
-      title: title || "No title",
-      body,
-      verified: user ? userHasDelivered(user.id, product.id) : false,
-      date: new Date().toISOString(),
-      userId: user ? user.id : null,
-    });
-    document.getElementById("review-title").value = "";
-    document.getElementById("review-body").value = "";
-    document.getElementById("review-char-count").textContent = "0 / 500";
-    toast("Review submitted — it will appear after a quick moderation check");
-    renderReviewsBlock(product);
+    const btn  = document.getElementById("submit-review");
+    btn.disabled = true;
+    btn.textContent = "Submitting...";
+
+    try {
+      const response = await fetch(WP_URL + "/wp-json/jerseyuniverse/v1/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: product.id,
+          name:      user ? user.firstName + " " + user.lastName[0] + "." : "Guest reviewer",
+          rating:    draftRating,
+          title:     title || "No title",
+          body,
+          verified:  user ? userHasDelivered(user.id, product.id) : false,
+          userId:    user ? String(user.id) : "",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok && !data.success) {
+        throw new Error("Failed to submit review.");
+      }
+
+      document.getElementById("review-title").value = "";
+      document.getElementById("review-body").value  = "";
+      document.getElementById("review-char-count").textContent = "0 / 500";
+      toast("Review submitted — thank you!");
+
+      // Re-fetch and re-render
+      const freshReviews = await fetchReviewsFromWP(product.id);
+      _cachedReviews = [...freshReviews, ...seeded];
+      document.getElementById("rating-summary").innerHTML = ratingSummaryHTML(_cachedReviews, product);
+      renderReviewsBlock(product, _cachedReviews);
+
+    } catch (err) {
+      // Even if there's a network error, try to re-fetch in case it saved
+      const freshReviews = await fetchReviewsFromWP(product.id);
+      if (freshReviews.length > _cachedReviews.length - seeded.length) {
+        // Review did save despite the error
+        document.getElementById("review-title").value = "";
+        document.getElementById("review-body").value  = "";
+        document.getElementById("review-char-count").textContent = "0 / 500";
+        toast("Review submitted — thank you!");
+        _cachedReviews = [...freshReviews, ...seeded];
+        document.getElementById("rating-summary").innerHTML = ratingSummaryHTML(_cachedReviews, product);
+        renderReviewsBlock(product, _cachedReviews);
+      } else {
+        toast("Could not submit review — please try again.");
+      }
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Submit review";
+    }
   });
 }
 
-function ratingSummaryHTML(product) {
-  const userReviews = getUserReviews()[product.id] || [];
-  const totalCount = product.reviewCount + userReviews.length;
-  const totalScore = product.rating * product.reviewCount + userReviews.reduce((s, r) => s + r.rating, 0);
+function ratingSummaryHTML(reviews, product) {
+  const allReviews = reviews || [];
+  const totalCount = allReviews.length;
+  const totalScore = allReviews.reduce((s, r) => s + (r.rating || 0), 0);
   const avg = totalCount ? totalScore / totalCount : 0;
   return `${starRow(avg)}<span class="font-mono text-sm text-ecru">${avg.toFixed(1)}</span><span class="text-xs text-muted">(${totalCount} reviews)</span>`;
 }
@@ -353,14 +487,14 @@ function drawStarInput() {
   draw();
 }
 
-function renderReviewsBlock(product) {
-  let list = getReviewsFor(product.id).slice();
+function renderReviewsBlock(product, reviews) {
+  let list = (reviews || []).slice();
   if (reviewSort === "high") list.sort((a, b) => b.rating - a.rating);
   else if (reviewSort === "low") list.sort((a, b) => a.rating - b.rating);
   else list.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   document.getElementById("review-count-label").textContent = `${list.length} review${list.length === 1 ? "" : "s"}`;
-  const session = getSession();
+  const user = currentUser();
 
   document.getElementById("review-list").innerHTML = list.length
     ? list.map((r) => `
@@ -375,25 +509,37 @@ function renderReviewsBlock(product) {
         <div class="mt-1">${starRow(r.rating)}</div>
         <p class="text-sm text-ecru mt-2 font-medium">${r.title}</p>
         <p class="text-sm text-muted mt-1 leading-relaxed">${r.body}</p>
-        ${r.userId && r.userId === session ? `<button data-delete-review="${r.date}" class="text-[11px] font-mono uppercase text-retro mt-2 hover:underline">Delete review</button>` : ""}
+        ${r.id && user && String(r.userId) === String(user.id) ? `<button data-delete-review="${r.id}" class="text-[11px] font-mono uppercase text-retro mt-2 hover:underline">Delete review</button>` : ""}
       </div>`).join("")
     : `<p class="text-sm text-muted">No reviews yet — be the first to share your experience.</p>`;
 
   document.querySelectorAll("[data-delete-review]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const all = getUserReviews();
-      all[product.id] = (all[product.id] || []).filter((r) => r.date !== btn.dataset.deleteReview);
-      writeStore(STORE_KEYS.REVIEWS, all);
-      renderReviewsBlock(product);
-      document.getElementById("rating-summary").innerHTML = ratingSummaryHTML(product);
+    btn.addEventListener("click", async () => {
+      const reviewId = btn.dataset.deleteReview;
+      const user = currentUser();
+      if (!user) return;
+      try {
+        await fetch(WP_URL + "/wp-json/jerseyuniverse/v1/reviews/" + reviewId + "?userId=" + user.id, {
+          method: "DELETE",
+        });
+        const wpReviews = await fetchReviewsFromWP(product.id);
+        const seeded = (typeof SEED_REVIEWS !== "undefined" && SEED_REVIEWS[product.id]) || [];
+        _cachedReviews = [...wpReviews, ...seeded];
+        document.getElementById("rating-summary").innerHTML = ratingSummaryHTML(_cachedReviews, product);
+        renderReviewsBlock(product, _cachedReviews);
+        toast("Review deleted.");
+      } catch (err) {
+        toast("Could not delete review.");
+      }
     });
   });
 }
 
 /* ---------- Init ---------- */
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadProducts();
   const product = getProduct(getProductIdFromURL());
   if (!product) { renderNotFound(); return; }
-  document.title = product.name + " — JerseySphere";
+  document.title = product.name + " — Jersey Universe";
   renderProduct(product);
 });
