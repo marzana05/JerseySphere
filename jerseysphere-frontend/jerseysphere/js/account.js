@@ -1,6 +1,15 @@
 /* ===========================================================
-   JerseySphere — account dashboard
+   Jersey Universe — account dashboard
+   Orders now fetched from WordPress.
    =========================================================== */
+
+const STATUS_STAGES = {
+  "Order Placed":    0,
+  "Processing":      1,
+  "Shipped":         2,
+  "Out for Delivery":3,
+  "Delivered":       4,
+};
 
 function activeTab() {
   return new URLSearchParams(window.location.search).get("tab") || "orders";
@@ -45,9 +54,18 @@ function renderAccountShell() {
   <div id="tab-content"></div>
   `;
 
-  document.getElementById("logout-btn").addEventListener("click", () => { clearSession(); toast("Logged out"); window.location.href = "index.html"; });
+  document.getElementById("logout-btn").addEventListener("click", () => {
+    clearSession();
+    toast("Logged out");
+    window.location.href = "index.html";
+  });
+
   const verifyBtn = document.getElementById("verify-now");
-  if (verifyBtn) verifyBtn.addEventListener("click", () => { verifyCurrentUserEmail(); toast("Email verified"); renderAccountShell(); });
+  if (verifyBtn) verifyBtn.addEventListener("click", () => {
+    verifyCurrentUserEmail();
+    toast("Email verified");
+    renderAccountShell();
+  });
 
   document.querySelectorAll(".account-tab").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -61,20 +79,94 @@ function renderAccountShell() {
   else renderProfileTab(user);
 }
 
-function renderOrdersTab(user) {
-  const orders = getOrdersForUser(user.id);
+async function renderOrdersTab(user) {
   const wrap = document.getElementById("tab-content");
-  if (!orders.length) {
-    wrap.innerHTML = emptyState({ title: "No orders yet", body: "Once you place an order it'll show up here with live tracking.", ctaLabel: "Shop jerseys", ctaHref: "shop.html" });
-    return;
+  wrap.innerHTML = `<p class="text-muted text-sm">Loading your orders...</p>`;
+
+  try {
+    const response = await fetch(WP_URL + "/wp-json/jerseyuniverse/v1/orders");
+    const allOrders = await response.json();
+
+    // Filter orders belonging to this customer by email
+    const orders = allOrders.filter((o) =>
+      o.email && o.email.toLowerCase() === user.email.toLowerCase()
+    );
+
+    if (!orders.length) {
+      wrap.innerHTML = emptyState({
+        title: "No orders yet",
+        body: "Once you place an order it will show up here with live tracking.",
+        ctaLabel: "Shop jerseys",
+        ctaHref: "shop.html",
+      });
+      return;
+    }
+
+    wrap.innerHTML = orders.map((o) => wpOrderCardHTML(o)).join("");
+
+  } catch (err) {
+    // Fallback to localStorage if WordPress is unreachable
+    console.warn("Could not fetch orders from WordPress, falling back to localStorage.");
+    const orders = getOrdersForUser(user.id);
+    if (!orders.length) {
+      wrap.innerHTML = emptyState({
+        title: "No orders yet",
+        body: "Once you place an order it will show up here with live tracking.",
+        ctaLabel: "Shop jerseys",
+        ctaHref: "shop.html",
+      });
+      return;
+    }
+    wrap.innerHTML = orders.map((o) => orderCardHTML(o)).join("");
+    orders.forEach((o) => {
+      const btn = document.querySelector(`[data-advance="${o.id}"]`);
+      if (btn) btn.addEventListener("click", () => { advanceOrderStage(o.id); renderOrdersTab(user); });
+    });
   }
-  wrap.innerHTML = orders.map((o) => orderCardHTML(o)).join("");
-  orders.forEach((o) => {
-    const btn = document.querySelector(`[data-advance="${o.id}"]`);
-    if (btn) btn.addEventListener("click", () => { advanceOrderStage(o.id); renderOrdersTab(user); });
-  });
 }
 
+/* Order card using WordPress data format */
+function wpOrderCardHTML(order) {
+  const stageIndex = STATUS_STAGES[order.status] ?? 0;
+  const shipped = stageIndex >= 2;
+  const total = parseFloat(order.total) || 0;
+  const date = order.created_at ? order.created_at.split(" ")[0] : "—";
+
+  return `
+  <div class="bg-surface border border-line rounded-2xl p-5 mb-5">
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+      <div>
+        <p class="font-mono text-sm text-gold">${order.id}</p>
+        <p class="text-xs text-muted">Placed ${date}</p>
+      </div>
+      <p class="font-mono text-sm text-ecru">${formatMoney(total)}</p>
+    </div>
+
+    <div class="flex items-center gap-1 mb-4">
+      ${ORDER_STAGES.map((label, i) => `
+        <div class="flex-1 flex flex-col items-center">
+          <span class="w-3 h-3 rounded-full ${i <= stageIndex ? "bg-pitch" : "bg-line"}"></span>
+          <span class="text-[10px] font-mono uppercase mt-1.5 text-center ${i <= stageIndex ? "text-ecru" : "text-muted"}">${label}</span>
+        </div>
+        ${i < ORDER_STAGES.length - 1 ? `<span class="flex-1 h-px ${i < stageIndex ? "bg-pitch" : "bg-line"} -mt-4"></span>` : ""}
+      `).join("")}
+    </div>
+
+    <div class="bg-surface2 rounded-xl p-3 mb-3">
+      <p class="text-xs font-mono uppercase text-muted mb-1">Items ordered</p>
+      <p class="text-sm text-ecru whitespace-pre-line">${order.items || "—"}</p>
+    </div>
+
+    <div class="flex gap-4 text-xs text-muted">
+      <span>Payment: <span class="text-ecru">${order.payment === "cod" ? "Cash on Delivery" : order.payment}</span></span>
+      ${shipped ? `<span>Status: <span class="text-pitch font-mono">${order.status}</span></span>` : ""}
+    </div>
+
+    ${stageIndex === ORDER_STAGES.length - 1 ? `<p class="mt-4 text-xs text-pitch font-mono uppercase">Delivered</p>` : `<p class="mt-4 text-xs text-muted">Status updates are managed by the shop — check back soon.</p>`}
+  </div>`;
+}
+
+/* Original order card for localStorage fallback */
 function orderCardHTML(order) {
   const shipped = order.stageIndex >= 2;
   return `
@@ -102,6 +194,7 @@ function orderCardHTML(order) {
     <div class="divide-y divide-line">
       ${order.items.map((line) => {
         const p = getProduct(line.productId);
+        if (!p) return "";
         return `<div class="py-2 flex justify-between text-sm"><span class="text-ecru">${p.name} (${line.size}) × ${line.qty}</span><span class="font-mono text-muted">${formatMoney(lineTotal(line, p))}</span></div>`;
       }).join("")}
     </div>
@@ -159,9 +252,8 @@ function renderProfileTab(user) {
     <div><p class="text-xs font-mono uppercase text-muted">Email status</p><p class="text-ecru">${user.verified ? "Verified" : "Not verified yet"}</p></div>
   </div>`;
 }
+
 document.addEventListener("DOMContentLoaded", async () => {
   await loadProducts();
   renderAccountShell();
 });
-
-
