@@ -1,5 +1,5 @@
 /* ===========================================================
-   JerseySphere — shared UI components
+   Jersey Universe — shared UI components
    =========================================================== */
 
 function starRow(rating, count) {
@@ -48,7 +48,7 @@ function productCardHTML(product) {
   <a href="product.html?id=${product.id}" class="group block bg-surface border border-line rounded-2xl overflow-hidden card-lift relative">
     ${kitTag({ clubTag: c.tag, season: product.season, type: product.type })}
     ${heartButton(product.id)}
-    <div class="aspect-square flex items-center justify-center bg-surface2/60 p-6">
+    <div class="product-img-wrap aspect-square flex items-center justify-center bg-surface2/60 p-6">
   ${product.image
     ? `<img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover rounded-xl" />`
     : jerseySVG({ primary: c.primary, secondary: c.secondary, retro: product.type === "retro", size: 140 })}
