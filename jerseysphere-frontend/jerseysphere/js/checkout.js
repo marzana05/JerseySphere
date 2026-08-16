@@ -1,15 +1,8 @@
 /* ===========================================================
-   JerseySphere — checkout logic
+   Jersey Universe — checkout logic
    =========================================================== */
 
-let selectedPayment = null;
-
-const PAYMENT_METHODS = [
-  { id: "card", label: "Credit / debit card" },
-  { id: "bkash", label: "bKash" },
-  { id: "nagad", label: "Nagad" },
-  { id: "cod", label: "Cash on delivery" },
-];
+let selectedPayment = "cod"; // Cash on Delivery is the default and only active option
 
 function goToStep(n) {
   document.querySelectorAll("[data-step]").forEach((el) => el.classList.toggle("hidden", el.dataset.step !== String(n)));
@@ -19,21 +12,18 @@ function goToStep(n) {
     if (i === n) el.classList.add("active");
     if (i < n) el.classList.add("done");
   });
-  if (n === 3) fillReview();
+  if (n === 2) fillReview();
 }
 
 function renderPaymentOptions() {
-  document.getElementById("payment-options").innerHTML = PAYMENT_METHODS.map((m) => `
-    <label class="flex items-center gap-3 border border-line rounded-lg px-3 py-2.5 cursor-pointer">
-      <input type="radio" name="payment" value="${m.id}" class="text-gold focus:ring-gold" />
-      <span class="text-sm text-ecru">${m.label}</span>
-    </label>`).join("");
+  // Payment options are now hardcoded in checkout.html
+  // COD is pre-selected by default
+  selectedPayment = "cod";
 
+  // Listen if user selects a different option in future
   document.querySelectorAll('input[name="payment"]').forEach((r) => {
     r.addEventListener("change", () => {
       selectedPayment = r.value;
-      document.getElementById("card-fields").classList.toggle("hidden", r.value !== "card");
-      document.getElementById("payment-error").classList.add("hidden");
     });
   });
 }
@@ -51,10 +41,14 @@ function renderSummarySidebar() {
 }
 
 function fillReview() {
-  const address = `${val("ship-name")}<br>${val("ship-address")}<br>${val("ship-city")} ${val("ship-postal")}<br>${val("ship-phone")}`;
+  const address = `${val("ship-name")}<br>${val("ship-email")}<br>${val("ship-address")}<br>${val("ship-city")} ${val("ship-postal")}<br>${val("ship-phone")}`;
   document.getElementById("review-address").innerHTML = address;
-  const method = PAYMENT_METHODS.find((m) => m.id === selectedPayment);
-  document.getElementById("review-payment").textContent = method ? method.label : "—";
+
+  const paymentLabels = {
+    "cod": "Cash on Delivery",
+    "sslcommerz": "SSLCommerz Online Payment",
+  };
+  document.getElementById("review-payment").textContent = paymentLabels[selectedPayment] || selectedPayment;
 
   const cart = getCart();
   document.getElementById("review-items").innerHTML = cart.map((line) => {
@@ -76,10 +70,7 @@ function wireStepButtons() {
           return;
         }
         document.getElementById("ship-error").classList.add("hidden");
-      }
-      if (next === 3 && !selectedPayment) {
-        document.getElementById("payment-error").classList.remove("hidden");
-        return;
+        selectedPayment = "cod";
       }
       goToStep(next);
     });
@@ -88,28 +79,40 @@ function wireStepButtons() {
 }
 
 function placeOrderFlow() {
-  document.getElementById("place-order").addEventListener("click", () => {
+  document.getElementById("place-order").addEventListener("click", async () => {
+    const btn = document.getElementById("place-order");
+    btn.disabled = true;
+    btn.textContent = "Placing order…";
+
     const cart = getCart();
     const subtotal = cart.reduce((s, line) => s + lineTotal(line, getProduct(line.productId)), 0);
     const total = subtotal + SHIPPING_FLAT;
     const user = currentUser();
-    const order = placeOrder({
-      userId: user ? user.id : null,
-      items: cart,
-      address: { name: val("ship-name"), address: val("ship-address"), city: val("ship-city"), postal: val("ship-postal"), phone: val("ship-phone") },
-      payment: selectedPayment,
-      total,
-    });
-    clearCart();
-    document.getElementById("checkout-flow").classList.add("hidden");
-    document.getElementById("checkout-confirmation").classList.remove("hidden");
-    document.getElementById("conf-id").textContent = order.id;
-    document.getElementById("conf-eta").textContent = formatDate(order.eta);
-    document.getElementById("conf-total").textContent = formatMoney(order.total);
+
+    try {
+      const order = await placeOrder({
+        userId: user ? user.id : null,
+        items: cart,
+        address: { name: val("ship-name"), email: val("ship-email"), address: val("ship-address"), city: val("ship-city"), postal: val("ship-postal"), phone: val("ship-phone") },
+        payment: selectedPayment,
+        total,
+      });
+      clearCart();
+      document.getElementById("checkout-flow").classList.add("hidden");
+      document.getElementById("checkout-confirmation").classList.remove("hidden");
+      document.getElementById("conf-id").textContent = order.id;
+      document.getElementById("conf-eta").textContent = formatDate(order.eta);
+      document.getElementById("conf-total").textContent = formatMoney(order.total);
+    } catch (err) {
+      toast("Something went wrong placing your order. Please try again.");
+      btn.disabled = false;
+      btn.textContent = "Place order";
+    }
   });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadProducts();
   if (!getCart().length) {
     document.getElementById("checkout-root").innerHTML = "";
     document.getElementById("checkout-root").appendChild(
