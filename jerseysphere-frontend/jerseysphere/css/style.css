@@ -1,5 +1,5 @@
 /* ===========================================================
-   JerseySphere — custom styles
+   Jersey Universe — custom styles
    Tailwind (via CDN) handles layout/utilities. This file only
    covers the things utilities can't express cleanly: the
    diagonal pitch-stripe divider, the woven kit-tag label,
@@ -90,4 +90,60 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 @media (prefers-reduced-motion: reduce) {
   .card-lift { transition: none; }
+}
+
+/* Product card image zoom on hover — shop page only
+   The image scales up inside its container — the card itself
+   stays exactly the same size. overflow:hidden clips the
+   zoomed image cleanly at the card boundary. */
+.product-img-wrap {
+  overflow: hidden;
+}
+body[data-page="shop"] .product-img-wrap img {
+  transition: transform 0.4s ease;
+  will-change: transform;
+}
+body[data-page="shop"] .product-img-wrap:hover img {
+  transform: scale(1.08);
+}
+
+/* Product image magnifier lens
+   A circular zoom lens that follows the cursor over the product photo */
+.img-magnifier-container {
+  position: relative;
+  cursor: crosshair;
+}
+.img-magnifier-glass {
+  position: absolute;
+  border: 2px solid #D9A441;
+  border-radius: 50%;
+  width: 160px;
+  height: 160px;
+  pointer-events: none;
+  display: none;
+  z-index: 20;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  background-repeat: no-repeat;
+}
+.img-magnifier-container:hover .img-magnifier-glass {
+  display: block;
+}
+.magnifier-hint {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(14,26,20,0.75);
+  border: 1px solid #2A3B30;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: monospace;
+  color: #D9A441;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  pointer-events: none;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
