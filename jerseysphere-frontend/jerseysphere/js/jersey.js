@@ -1,5 +1,5 @@
 /* ===========================================================
-   JerseySphere — jersey illustration
+   Jersey Universe — jersey illustration
    A simplified jersey silhouette so every product has a visual
    without using any real club crests or photography.
    =========================================================== */
