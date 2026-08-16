@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — Jersey Universe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: { extend: {
+      colors: { night:'#0E1A14', surface:'#16241C', surface2:'#1E2F25', gold:'#D9A441', pitch:'#4CAF6D', retro:'#C0463A', ecru:'#F3EFE3', muted:'#9CA89E', line:'#2A3B30' },
+      fontFamily: { display:['Anton','sans-serif'], mono:['Space Mono','monospace'] },
+    }}
+  };
+</script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="checkout" class="bg-night">
+
+<div id="site-header"></div>
+
+<main class="max-w-5xl mx-auto px-4 sm:px-6 py-8" id="checkout-root">
+
+  <div id="checkout-flow">
+    <h1 class="font-display text-3xl sm:text-4xl text-ecru mb-6">Checkout</h1>
+
+    <div class="flex items-center gap-3 mb-8">
+      <div class="flex items-center gap-2"><span class="step-num active" data-step-num="1">1</span><span class="font-mono text-xs uppercase text-ecru">Shipping</span></div>
+      <span class="flex-1 h-px bg-line"></span>
+      <div class="flex items-center gap-2"><span class="step-num" data-step-num="2">2</span><span class="font-mono text-xs uppercase text-muted">Review & Confirm</span></div>
+    </div>
+
+    <div class="grid lg:grid-cols-[1fr_300px] gap-8">
+      <div>
+        <!-- STEP 1 -->
+        <div data-step="1" class="space-y-3">
+          <input id="ship-name" placeholder="Full name" class="w-full bg-surface border border-line rounded-lg px-3 py-2.5 text-sm text-ecru focus:outline-none focus:ring-2 focus:ring-gold" />
+          <input id="ship-email" type="email" placeholder="Email address (for order confirmation)" class="w-full bg-surface border border-line rounded-lg px-3 py-2.5 text-sm text-ecru focus:outline-none focus:ring-2 focus:ring-gold" />
+          <input id="ship-address" placeholder="Street address" class="w-full bg-surface border border-line rounded-lg px-3 py-2.5 text-sm text-ecru focus:outline-none focus:ring-2 focus:ring-gold" />
+          <div class="grid grid-cols-2 gap-3">
+            <input id="ship-city" placeholder="City" class="w-full bg-surface border border-line rounded-lg px-3 py-2.5 text-sm text-ecru focus:outline-none focus:ring-2 focus:ring-gold" />
+            <input id="ship-postal" placeholder="Postal code" class="w-full bg-surface border border-line rounded-lg px-3 py-2.5 text-sm text-ecru focus:outline-none focus:ring-2 focus:ring-gold" />
+          </div>
+          <input id="ship-phone" placeholder="Phone number" class="w-full bg-surface border border-line rounded-lg px-3 py-2.5 text-sm text-ecru focus:outline-none focus:ring-2 focus:ring-gold" />
+
+          <!-- Payment method shown here -->
+          <div class="bg-surface border border-line rounded-lg px-4 py-3 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-mono uppercase text-muted mb-1">Payment method</p>
+              <p class="text-sm text-ecru font-medium">Cash on Delivery</p>
+              <p class="text-xs text-muted mt-0.5">Pay when your jersey arrives</p>
+            </div>
+            <span class="font-mono text-[10px] uppercase px-2 py-1 rounded-full border border-pitch text-pitch">Active</span>
+          </div>
+
+          <!-- SSLCommerz coming soon -->
+          <div class="bg-surface border border-line rounded-lg px-4 py-3 flex items-center justify-between opacity-50">
+            <div>
+              <p class="text-xs font-mono uppercase text-muted mb-1">Online payment</p>
+              <p class="text-sm text-ecru font-medium">SSLCommerz — bKash, Card & more</p>
+            </div>
+            <span class="font-mono text-[10px] uppercase px-2 py-1 rounded-full border border-gold text-gold">Coming Soon</span>
+          </div>
+
+          <p id="ship-error" class="text-xs text-retro hidden">Please fill in every field before continuing.</p>
+          <button data-next="2" class="mt-2 bg-gold text-[#16130A] font-mono text-sm uppercase tracking-wide px-6 py-3 rounded-full hover:opacity-90">Review order</button>
+        </div>
+
+        <!-- STEP 2 — Review & Confirm -->
+        <div data-step="2" class="hidden space-y-4">
+          <div class="bg-surface border border-line rounded-xl p-4">
+            <p class="font-mono text-xs uppercase text-gold mb-2">Shipping to</p>
+            <p class="text-sm text-ecru" id="review-address"></p>
+          </div>
+          <div class="bg-surface border border-line rounded-xl p-4">
+            <p class="font-mono text-xs uppercase text-gold mb-2">Payment method</p>
+            <p class="text-sm text-ecru" id="review-payment"></p>
+          </div>
+          <div class="bg-surface border border-line rounded-xl p-4 divide-y divide-line" id="review-items"></div>
+          <div class="flex gap-3">
+            <button data-back="1" class="border border-line text-ecru font-mono text-sm uppercase tracking-wide px-5 py-3 rounded-full">Back</button>
+            <button id="place-order" class="flex-1 bg-gold text-[#16130A] font-mono text-sm uppercase tracking-wide px-6 py-3 rounded-full hover:opacity-90">Place order</button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="bg-surface border border-line rounded-2xl p-5 h-fit">
+        <p class="font-mono text-xs uppercase text-gold mb-4">Order summary</p>
+        <div id="checkout-summary-items" class="space-y-2 text-sm text-muted mb-3"></div>
+        <div class="space-y-2 text-sm pt-3 border-t border-line">
+          <div class="flex justify-between text-muted"><span>Subtotal</span><span id="co-subtotal" class="text-ecru font-mono"></span></div>
+          <div class="flex justify-between text-muted"><span>Shipping</span><span id="co-shipping" class="text-ecru font-mono"></span></div>
+          <div class="flex justify-between pt-2 border-t border-line text-ecru font-medium"><span>Total</span><span id="co-total" class="font-mono"></span></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- CONFIRMATION -->
+  <div id="checkout-confirmation" class="hidden max-w-lg mx-auto text-center py-16">
+    <div class="w-16 h-16 rounded-full bg-pitch/15 border border-pitch flex items-center justify-center mx-auto mb-5">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4CAF6D" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h1 class="font-display text-3xl text-ecru mb-2">Order confirmed</h1>
+    <p class="text-muted mb-6">A confirmation email is on its way. Here are your order details.</p>
+    <div class="bg-surface border border-line rounded-2xl p-6 text-left space-y-2">
+      <div class="flex justify-between text-sm"><span class="text-muted">Order ID</span><span class="font-mono text-gold" id="conf-id"></span></div>
+      <div class="flex justify-between text-sm"><span class="text-muted">Estimated delivery</span><span class="font-mono text-ecru" id="conf-eta"></span></div>
+      <div class="flex justify-between text-sm"><span class="text-muted">Total paid</span><span class="font-mono text-ecru" id="conf-total"></span></div>
+    </div>
+    <div class="flex gap-3 justify-center mt-6">
+      <a href="account.html?tab=orders" class="bg-gold text-[#16130A] font-mono text-sm uppercase tracking-wide px-6 py-3 rounded-full hover:opacity-90">Track this order</a>
+      <a href="shop.html" class="border border-line text-ecru font-mono text-sm uppercase tracking-wide px-6 py-3 rounded-full">Continue shopping</a>
+    </div>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="js/data.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/jersey.js"></script>
+<script src="js/components.js"></script>
+<script src="js/main.js"></script>
+<script src="js/checkout.js"></script>
+</body>
+</html>
