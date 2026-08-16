@@ -1,5 +1,5 @@
 /* ===========================================================
-   JerseySphere — cart page logic
+   Jersey Universe — cart page logic
    =========================================================== */
 
 function renderCart() {
@@ -34,6 +34,7 @@ function renderCart() {
         <p class="font-mono text-[10px] uppercase text-gold">${c.name}</p>
         <p class="text-sm text-ecru leading-snug">${product.name}</p>
         <p class="text-xs text-muted mt-1">Size ${line.size}${line.customization ? ` · ${line.customization.name} #${line.customization.number}` : ""}</p>
+        ${line.customization ? `<p class="text-xs text-pitch font-mono mt-0.5">+ Tk ${line.customization.fee || 300} customization</p>` : ""}
         <div class="flex items-center gap-3 mt-3">
           <div class="flex items-center border border-line rounded-full">
             <button data-qty-down="${i}" class="px-2.5 py-1 text-ecru">−</button>
@@ -63,4 +64,7 @@ function renderCart() {
   document.getElementById("sum-total").textContent = formatMoney(subtotal + shipping);
 }
 
-document.addEventListener("DOMContentLoaded", renderCart);
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadProducts();
+  renderCart();
+});
