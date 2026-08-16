@@ -1,5 +1,5 @@
 /* ===========================================================
-   JerseySphere — shared chrome (header + footer) and site-wide wiring
+   Jersey Universe — shared chrome (header + footer) and site-wide wiring
    Every page has empty <div id="site-header"> and <div id="site-footer">
    placeholders; this file fills them in so markup isn't duplicated
    eight times across the site.
@@ -19,7 +19,8 @@ const HEADER_HTML = `
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
     <div class="flex items-center justify-between h-16 gap-4">
       <a href="index.html" class="flex items-center gap-2 shrink-0">
-        <span class="font-display text-xl sm:text-2xl text-[#F3EFE3] tracking-tight">JERSEY<span class="text-[#D9A441]">SPHERE</span></span>
+        <img src="assets/images/logo.png" alt="Jersey Universe logo" class="h-8 w-8 object-contain" onerror="this.style.display='none'" />
+        <span class="font-display text-xl sm:text-2xl text-[#F3EFE3] tracking-tight">JERSEY<span class="text-[#D9A441]">UNIVERSE</span></span>
       </a>
 
       <nav class="hidden lg:flex items-center gap-7 font-mono text-[12px] uppercase tracking-wide text-[#CBD3C9]" data-nav>
@@ -72,7 +73,7 @@ const FOOTER_HTML = `
 <footer class="bg-[#0A140F] border-t border-[#2A3B30] mt-20">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-2 sm:grid-cols-4 gap-8 text-sm">
     <div class="col-span-2 sm:col-span-1">
-      <span class="font-display text-lg text-[#F3EFE3]">JERSEY<span class="text-[#D9A441]">SPHERE</span></span>
+      <span class="font-display text-lg text-[#F3EFE3]">JERSEY<span class="text-[#D9A441]">UNIVERSE</span></span>
       <p class="text-[#8E9A90] mt-3 leading-relaxed">Club kits and retro jerseys, printed to order. A demo storefront — no real payments are processed.</p>
     </div>
     <div>
@@ -100,7 +101,7 @@ const FOOTER_HTML = `
       </ul>
     </div>
   </div>
-  <div class="border-t border-[#2A3B30] py-5 text-center text-[11px] text-[#5F6B61] font-mono">© 2026 JerseySphere — demo build, not a real store</div>
+  <div class="border-t border-[#2A3B30] py-5 text-center text-[11px] text-[#5F6B61] font-mono">© 2026 Jersey Universe — Developed by Nusrat Marzana, Rifa Tasnim Roza & Kaisan Faraz </div>
 </footer>
 `;
 
