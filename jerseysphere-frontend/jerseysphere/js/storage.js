@@ -1,19 +1,20 @@
 /* ===========================================================
-   JerseySphere — storage layer
-   Wraps localStorage so every page reads/writes the same shape.
-   This is a static demo: there is no real server, so "account",
-   "orders" and "payment" are all simulated client-side.
+   Jersey Universe — storage layer
+   Cart and wishlist stay in localStorage (per-browser by design).
+   Accounts now connect to WordPress Users.
+   Orders now save to WordPress via the custom Order API.
    =========================================================== */
 
 const STORE_KEYS = {
-  CART: "js_cart",
-  WISHLIST: "js_wishlist",
-  USERS: "js_users",
-  SESSION: "js_session",
-  ORDERS: "js_orders",
-  REVIEWS: "js_reviews",
+  CART:          "js_cart",
+  WISHLIST:      "js_wishlist",
+  SESSION_USER:  "js_session_user",
+  ORDERS:        "js_orders",
+  REVIEWS:       "js_reviews",
   RECENT_SEARCH: "js_recent_search",
 };
+
+const WP_URL = "https://jerseyuniverse.shop";
 
 function readStore(key, fallback) {
   try {
@@ -27,12 +28,11 @@ function writeStore(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-/* ---------- Cart ---------- */
+/* ---------- Cart (localStorage — per browser by design) ---------- */
 function getCart() { return readStore(STORE_KEYS.CART, []); }
 function saveCart(cart) { writeStore(STORE_KEYS.CART, cart); updateCartBadge(); }
 
 function addToCart(item) {
-  // item: { productId, size, qty, customization: {name, number, fee} | null }
   const cart = getCart();
   const sameLine = cart.find((c) =>
     c.productId === item.productId &&
@@ -67,7 +67,7 @@ function updateCartBadge() {
   });
 }
 
-/* ---------- Wishlist ---------- */
+/* ---------- Wishlist (localStorage — per browser by design) ---------- */
 function getWishlist() { return readStore(STORE_KEYS.WISHLIST, []); }
 function isWishlisted(productId) { return getWishlist().includes(productId); }
 function toggleWishlist(productId) {
@@ -81,72 +81,115 @@ function toggleWishlist(productId) {
   return list.includes(productId);
 }
 
-/* ---------- Auth (mock) ---------- */
-function getUsers() { return readStore(STORE_KEYS.USERS, []); }
-function getSession() { return readStore(STORE_KEYS.SESSION, null); }
-function setSession(userId) { writeStore(STORE_KEYS.SESSION, userId); }
-function clearSession() { localStorage.removeItem(STORE_KEYS.SESSION); }
+/* ---------- Auth (now backed by WordPress Users) ---------- */
 function currentUser() {
-  const id = getSession();
-  if (!id) return null;
-  return getUsers().find((u) => u.id === id) || null;
+  return readStore(STORE_KEYS.SESSION_USER, null);
 }
-function registerUser({ firstName, lastName, email, password }) {
-  const users = getUsers();
-  if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
-    return { ok: false, error: "An account with this email already exists." };
-  }
-  const user = {
-    id: "u_" + Date.now().toString(36),
-    firstName, lastName, email,
-    password, // demo only — never store plain passwords in a real app
-    verified: false,
-  };
-  users.push(user);
-  writeStore(STORE_KEYS.USERS, users);
-  setSession(user.id);
-  return { ok: true, user };
+function getSession() {
+  return currentUser();
 }
-function verifyCurrentUserEmail() {
-  const id = getSession();
-  const users = getUsers();
-  const user = users.find((u) => u.id === id);
-  if (!user) return;
-  user.verified = true;
-  writeStore(STORE_KEYS.USERS, users);
-}
-function loginUser({ email, password }) {
-  const user = getUsers().find(
-    (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-  );
-  if (!user) return { ok: false, error: "Email or password is incorrect." };
-  setSession(user.id);
-  return { ok: true, user };
+function clearSession() {
+  localStorage.removeItem(STORE_KEYS.SESSION_USER);
 }
 
-/* ---------- Orders ---------- */
+async function registerUser({ firstName, lastName, email, password }) {
+  try {
+    const response = await fetch(WP_URL + "/wp-json/jerseyuniverse/v1/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ firstName, lastName, email, password }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      return { ok: false, error: data.message || "Registration failed." };
+    }
+    writeStore(STORE_KEYS.SESSION_USER, data.user);
+    return { ok: true, user: data.user };
+  } catch (err) {
+    return { ok: false, error: "Could not connect to server. Is WordPress running?" };
+  }
+}
+
+async function loginUser({ email, password }) {
+  try {
+    const response = await fetch(WP_URL + "/wp-json/jerseyuniverse/v1/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      return { ok: false, error: data.message || "Email or password is incorrect." };
+    }
+    writeStore(STORE_KEYS.SESSION_USER, data.user);
+    return { ok: true, user: data.user };
+  } catch (err) {
+    return { ok: false, error: "Could not connect to server. Is WordPress running?" };
+  }
+}
+
+function verifyCurrentUserEmail() {
+  const user = currentUser();
+  if (!user) return;
+  user.verified = true;
+  writeStore(STORE_KEYS.SESSION_USER, user);
+}
+
+/* ---------- Orders (now saved to WordPress) ---------- */
 const ORDER_STAGES = ["Order placed", "Processing", "Shipped", "Out for delivery", "Delivered"];
 
 function getOrders() { return readStore(STORE_KEYS.ORDERS, []); }
 function getOrdersForUser(userId) {
   return getOrders().filter((o) => o.userId === userId).sort((a, b) => b.createdAt - a.createdAt);
 }
-function placeOrder({ userId, items, address, payment, total }) {
-  const orders = getOrders();
-  const order = {
-    id: "JS-" + Math.random().toString(36).slice(2, 8).toUpperCase(),
-    userId: userId || null,
-    items, address, payment, total,
-    stageIndex: 0,
-    courier: "Pathao Courier",
-    tracking: "TRK" + Math.floor(100000 + Math.random() * 899999),
-    createdAt: Date.now(),
-    eta: Date.now() + 5 * 24 * 60 * 60 * 1000,
-  };
-  orders.push(order);
-  writeStore(STORE_KEYS.ORDERS, orders);
-  return order;
+
+async function placeOrder({ userId, items, address, payment, total }) {
+  try {
+    const response = await fetch(WP_URL + "/wp-json/jerseyuniverse/v1/place-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, items, address, payment, total }),
+    });
+
+    if (!response.ok) throw new Error("WordPress order API returned " + response.status);
+
+    const wpOrder = await response.json();
+
+    const order = {
+      id:        wpOrder.id,
+      userId:    userId || null,
+      items, address, payment, total,
+      stageIndex: 0,
+      courier:   wpOrder.courier,
+      tracking:  wpOrder.tracking,
+      createdAt: wpOrder.createdAt,
+      eta:       Date.now() + 5 * 24 * 60 * 60 * 1000,
+    };
+
+    const orders = getOrders();
+    orders.push(order);
+    writeStore(STORE_KEYS.ORDERS, orders);
+    return order;
+
+  } catch (err) {
+    console.error("Could not save order to WordPress:", err.message);
+    const order = {
+      id: "JU-" + Math.random().toString(36).slice(2, 8).toUpperCase(),
+      userId: userId || null,
+      items, address, payment, total,
+      stageIndex: 0,
+      courier: "Pathao Courier",
+      tracking: "TRK" + Math.floor(100000 + Math.random() * 899999),
+      createdAt: Date.now(),
+      eta: Date.now() + 5 * 24 * 60 * 60 * 1000,
+    };
+    const orders = getOrders();
+    orders.push(order);
+    writeStore(STORE_KEYS.ORDERS, orders);
+    return order;
+  }
 }
+
 function advanceOrderStage(orderId) {
   const orders = getOrders();
   const order = orders.find((o) => o.id === orderId);
@@ -163,7 +206,7 @@ function userHasDelivered(userId, productId) {
   );
 }
 
-/* ---------- Reviews (user-submitted, merged with seed data) ---------- */
+/* ---------- Reviews (localStorage for now) ---------- */
 function getUserReviews() { return readStore(STORE_KEYS.REVIEWS, {}); }
 function addReview(productId, review) {
   const all = getUserReviews();
@@ -177,7 +220,7 @@ function getReviewsFor(productId) {
   return [...userAdded, ...seeded];
 }
 
-/* ---------- Recent searches ---------- */
+/* ---------- Recent searches (localStorage) ---------- */
 function getRecentSearches() { return readStore(STORE_KEYS.RECENT_SEARCH, []); }
 function pushRecentSearch(term) {
   if (!term || !term.trim()) return;
