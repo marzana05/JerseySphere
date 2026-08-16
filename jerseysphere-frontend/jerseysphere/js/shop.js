@@ -1,5 +1,5 @@
 /* ===========================================================
-   JerseySphere — shop page logic
+   Jersey Universe — shop page logic
    Reads initial state from the URL (?club=, ?league=, ?type=,
    ?search=), renders filter controls, and re-filters the grid
    on every change without a full page reload.
@@ -132,7 +132,8 @@ function wireClearAll() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadProducts();
   readInitialStateFromURL();
   buildFilterControls();
   wireFilterToggleMobile();
